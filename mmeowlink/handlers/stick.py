@@ -23,6 +23,7 @@ class Sender (object):
     self.frames = [ ]
 
   def send (self, payload):
+    print "STICK: send "
     self.link.write(payload)
 
   def send_params (self):
@@ -35,6 +36,7 @@ class Sender (object):
     pkt = Packet.fromCommand(command, payload=payload, serial=command.serial)
     pkt = pkt.update(payload)
     buf = pkt.assemble( )
+    print "STICK: send_params"
     self.link.write(buf)
     self.sent_params = True
 
@@ -78,6 +80,7 @@ class Sender (object):
           pass
 
   def wait_for_ack (self, timeout=.500):
+    print "STICK: wait for ack"
     link = self.link
 
     while not self.done( ):
@@ -93,6 +96,7 @@ class Sender (object):
 
   def wait_response (self):
     link = self.link
+    print "STICK: wait_response"
     buf = link.read( )
     resp = Packet.fromBuffer(buf)
     if self.responds_to(resp):
@@ -147,6 +151,7 @@ class Repeater (Sender):
     buf = pkt.assemble( )
     log.info('Sending repeated message %s' % (str(buf).encode('hex')))
 
+    print "STICK: Repeater: call"
     self.link.write(buf, repetitions=repetitions)
 
     # Sometimes the first packet received will be mangled by the simultaneous

@@ -92,9 +92,13 @@ class SubgRfspyLink(SerialInterface):
 
       crc = CRC8.compute(string)
 
+      print "TX " + str(self.channel) + ":" + str(transmissions-1) + ":" + str(repetition_delay) + " " + binascii.hexlify(string)
+
       message = chr(self.channel) + chr(transmissions - 1) + chr(repetition_delay) + FourBySix.encode(string)
 
+
       rf_spy.do_command(rf_spy.CMD_SEND_PACKET, message, timeout=timeout)
+
 
   def get_packet( self, timeout=None ):
     rf_spy = self.serial_rf_spy
@@ -107,11 +111,15 @@ class SubgRfspyLink(SerialInterface):
     timeout_ms_low = int(timeout_ms - (timeout_ms_high * 256))
 
     resp = rf_spy.do_command(SerialRfSpy.CMD_GET_PACKET, chr(self.channel) + chr(timeout_ms_high) + chr(timeout_ms_low), timeout=timeout + 1)
+
     if not resp:
+      print "RSP: no response"
       raise CommsException("Did not get a response, or response is too short: %s" % len(resp))
+
 
     # If the length is less than or equal to 2, then it means we've received an error
     if len(resp) <= 2:
+      print "ERR: " + binascii.hexlify(resp) + "(timeout = " + str(timeout_ms) + ")"
       raise CommsException("Received an error response %s" % self.RFSPY_ERRORS[ resp[0] ])
 
     decoded = FourBySix.decode(resp[2:])
@@ -124,6 +132,8 @@ class SubgRfspyLink(SerialInterface):
       rssi = (rssi_dec / 2) - rssi_offset
       
     sequence = resp[1]
+
+    print "RSP(" + str(rssi) + "): " + binascii.hexlify(decoded)
 
     return {'rssi':rssi, 'sequence':sequence, 'data':decoded}
 
